@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Netflix Clone</title>
+  <style>
+    *, *::before, *::after {
+      margin: 0; padding: 0; box-sizing: border-box;
+    }
+    body, html {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #000;
+      color: #fff;
+      overflow-x: hidden;
+    }
+    img {
+      display: block;
+      max-width: 100%;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background: #e50914;
+      color: #fff;
+      padding: 10px 20px;
+      font-weight: 600;
+    }
+    a {
+      color: #e50914;
+      text-decoration: none;
+    }
+
+    #splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      z-index: 2000;
+      animation: fadeOut 2.6s forwards 2.4s;
+    }
+    #splash img {
+      width: 240px;
+      animation: fadeIn 1.6s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        visibility: hidden;
+      }
+    }
+
+    #auth {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: url('https://assets.nflxext.com/ffe/siteui/vlv3/81a0a140-f47e-4aef-b190-e103093c1a7c/412bb5e2-2b63-49c0-88cf-8ef7b6f6db69c/IN-en-20240506-popsignuptwoweeks-perspective_alpha_website_large.jpg') center/cover no-repeat;
+      position: relative;
+    }
+    #auth::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+    }
+    .auth-box {
+      position: relative;
+      z-index: 1;
+      width: 360px;
+      padding: 2rem;
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid #e50914;
+      border-radius: 8px;
+    }
+    .tab-buttons {
+      display: flex;
+      margin-bottom: 1.2rem;
+    }
+    .tab-buttons button {
+      flex: 1;
+      background: #333;
+      border: 1px solid #555;
+      border-radius: 0;
+      color: #bbb;
+      padding: 0.6rem;
+      font-weight: 600;
+    }
+    .tab-buttons button.active {
+      background: #e50914;
+      color: #fff;
+      border-color: #e50914;
+    }
+    .auth-box input {
+      width: 100%;
+      padding: 0.6rem;
+      margin: 0.4rem 0;
+      background: #111;
+      border: 1px solid #555;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    header {
+      display: none;
+      background: #111;
+      padding: 1rem 2rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header img {
+      height: 32px;
+    }
+
+    .hero {
+      display: none;
+      text-align: center;
+      padding: 4rem 1rem;
+      background: #111;
+    }
+    .hero h1 {
+      font-size: 2.4rem;
+      font-weight: 900;
+      margin-bottom: 1rem;
+    }
+    .hero p {
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .hero button {
+      font-size: 1rem;
+      padding: 0.75rem 2rem;
+      border-radius: 4px;
+      background-color: #e50914;
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      transition: background-color 0.3s ease;
+    }
+    .hero button:hover {
+      background-color: #b00710;
+    }
+
+    .movies {
+      display: none;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    .movies::-webkit-scrollbar {
+      display: none;
+    }
+    .card {
+      min-width: 80px; /* smaller */
+      max-width: 80px;
+      background: #222;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.3s;
+      flex-shrink: 0;
+    }
+    .card:hover {
+      transform: scale(1.05);
+    }
+    .card img {
+      height: 120px; /* smaller height */
+      object-fit: cover;
+      border-radius: 6px 6px 0 0;
+      width: 100%;
+    }
+    .card h3 {
+      text-align: center;
+      padding: 0.4rem 0.3rem;
+      font-size: 0.95rem;
+      height: 40px;
+      overflow: hidden;
+      line-height: 1.2;
+    }
+
+    /* ===== MODAL ===== */
+    #modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1500;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+    .modal-box {
+      background: #111;
+      padding: 1rem 1.5rem 2rem;
+      border-radius: 8px;
+      max-width: 600px;
+      width: 100%;
+      position: relative;
+      text-align: center;
+      color: #fff;
+    }
+    .modal-box img {
+      width: 100%;
+      max-height: 320px;
+      object-fit: contain;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      font-size: 2rem;
+      background: none;
+      color: #e50914;
+      cursor: pointer;
+      border: none;
+    }
+    .info p {
+      margin: 0.4rem 0;
+      font-size: 0.95rem;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .modal-actions button {
+      flex: 1 1 120px;
+    }
+    #trailerContainer {
+      margin-top: 1rem;
+    }
+    #trailer {
+      width: 100%;
+      height: 315px;
+      border: none;
+      border-radius: 6px;
+    }
+
+    /* ===== FAQ ===== */
+    .faq {
+      display: none;
+      background: #111;
+      padding: 3rem 1rem;
+      max-width: 800px;
+      margin: 2rem auto 3rem;
+      border-radius: 8px;
+    }
+    .faq h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+    }
+    details {
+      border: 1px solid #333;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      background: #222;
+      padding: 0.5rem 1rem;
+    }
+    summary {
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: 600;
+      outline: none;
+      padding: 0.5rem 0;
+    }
+    details[open] summary {
+      color: #e50914;
+    }
+    details p {
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+      line-height: 1.4;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    footer {
+      background: #111;
+      padding: 1.5rem 2rem;
+      text-align: center;
+      color: #bbb;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    @media (max-width: 600px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+      .card {
+        min-width: 100px;
+        max-width: 100px;
+      }
+      .card img {
+        height: 140px;
+      }
+      .modal-box {
+        max-width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+ 
+  <div id="splash">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" alt="Netflix" />
+  </div>
+
+  <section id="auth">
+    <div class="auth-box">
+      <div class="tab-buttons">
+        <button id="tabSignup" class="active">Sign Up</button>
+        <button id="tabLogin">Login</button>
+      </div>
+      <input id="email" type="email" placeholder="Email" />
+      <input id="password" type="password" placeholder="Password" />
+      <button id="authSubmit">Sign Up</button>
+    </div>
+  </section>
+  <header>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" alt="Netflix Logo" />
+  </header>
+  <section class="hero">
+    <h1>Unlimited Movies and More</h1>
+    <p>Watch anywhere. Cancel anytime.</p>
+    <button onclick="alert('Plan feature coming soon')">Choose Plan</button>
+  </section>
+
+  <!-- MOVIES ROW  -->
+  <section class="movies" id="movieRow"></section>
+
+  <!-- FAQ  -->
+  <section class="faq">
+    <h2>Frequently Asked Questions</h2>
+    <details open><summary>What is Netflix?</summary><p>Netflix is a streaming service that offers a wide variety of TV shows, movies, anime, documentaries and more.</p></details>
+    <details><summary>How much does Netflix cost?</summary><p>Plans start at ₹149 and go up to ₹649 a month.</p></details>
+    <details><summary>Where can I watch?</summary><p>Watch anywhere, anytime – on an unlimited number of devices.</p></details>
+    <details><summary>How do I cancel?</summary><p>You can cancel online in two clicks. No cancellation fees.</p></details>
+  </section>
+
+  <!-- MOVIE MODAL -->
+  <div id="modal" onclick="closeModal(event)">
+    <div class="modal-box" id="modalContent" onclick="event.stopPropagation()">
+      <!-- modal content dynamically injected -->
+    </div>
+  </div>
+
+  <!-- FOOTER  -->
+  <footer>
+    <h2>Contact Us</h2>
+    <p>Email: support@netflixclone.com</p>
+    <p>Phone: +1 234 567 890</p>
+  </footer>
+
+<script>
+  const splash = document.getElementById("splash");
+  const auth = document.getElementById("auth");
+  const tabSignup = document.getElementById("tabSignup");
+  const tabLogin = document.getElementById("tabLogin");
+  const authSubmit = document.getElementById("authSubmit");
+  const email = document.getElementById("email");
+  const password = document.getElementById("password");
+  const header = document.querySelector("header");
+  const hero = document.querySelector(".hero");
+  const moviesSection = document.getElementById("movieRow");
+  const faq = document.querySelector(".faq");
+  const modal = document.getElementById("modal");
+  const modalContent = document.getElementById("modalContent");
+
+  let mode = "signup";
+  let users = {};
+
+  setTimeout(() => {
+    splash.style.display = "none";
+    auth.style.display = "flex";
+  }, 3000);
+
+  tabSignup.onclick = () => {
+    mode = "signup";
+    tabSignup.classList.add("active");
+    tabLogin.classList.remove("active");
+    authSubmit.textContent = "Sign Up";
+  };
+
+  tabLogin.onclick = () => {
+    mode = "login";
+    tabLogin.classList.add("active");
+    tabSignup.classList.remove("active");
+    authSubmit.textContent = "Login";
+  };
+
+  authSubmit.onclick = () => {
+    const user = email.value.trim();
+    const pass = password.value.trim();
+    if (!user || !pass) return alert("Fill all fields");
+    if (mode === "signup") {
+      if (users[user]) return alert("User already exists");
+      users[user] = pass;
+      alert("Signup successful! Please log in.");
+      tabLogin.click();
+    } else {
+      if (!users[user] || users[user] !== pass) return alert("Invalid credentials");
+      auth.style.display = "none";
+      header.style.display = "flex";
+      hero.style.display = "block";
+      moviesSection.style.display = "flex";
+      faq.style.display = "block";
+      document.querySelector("footer").style.display = "block";
+      loadMovies();
+    }
+  };
+
+  function signOut() {
+    location.reload();
+  }
+
+  const movies = [
+  {
+    title: "RRR",
+    year: 2022,
+    lang: "Telugu/Hindi",
+    genre: "Action, Drama",
+    theme: "Rebellion & friendship against British rule.",
+    poster: "posters/rrr.jpg",
+    video: "https://www.youtube.com/embed/bHRgafXfHW0", // updated
+  },
+  {
+    title: "Animal",
+    year: 2023,
+    lang: "Hindi",
+    genre: "Action, Crime",
+    theme: "A son's dark path to avenge his father.",
+    poster: "posters/animal.jpg",
+    video: "https://www.youtube.com/embed/WuH9ahB-68Q", // updated
+  },
+  {
+    title: "KGF Chapter 1",
+    year: 2018,
+    lang: "Kannada",
+    genre: "Action, Period",
+    theme: "Rocky rises in the gold mines of Kolar.",
+    poster: "posters/kgf.jpg",
+    video: "https://www.youtube.com/embed/bDTUFufX-1s", // updated
+  },
+  {
+    title: "Jawan",
+    year: 2023,
+    lang: "Hindi",
+    genre: "Action, Thriller",
+    theme: "A vigilante sets out to rectify societal wrongs.",
+    poster: "posters/jawan.jpg",
+    video: "https://www.youtube.com/embed/MWOlnZSnXJo", // unchanged
+  },
+  {
+    title: "Pushpa",
+    year: 2021,
+    lang: "Telugu",
+    genre: "Action, Drama",
+    theme: "A red sandalwood smuggler rises in power.",
+    poster: "posters/pushpa.jpg",
+    video: "https://www.youtube.com/embed/Q1NKMPhP8PY", // unchanged
+  },
+  {
+    title: "Dangal",
+    year: 2016,
+    lang: "Hindi",
+    genre: "Biography, Drama",
+    theme: "A father trains his daughters to become world-class wrestlers.",
+    poster: "posters/dangal.jpg",
+    video: "https://www.youtube.com/embed/x_7YlGv9u1g", // unchanged
+  },
+  {
+    title: "Bahubali: The Beginning",
+    year: 2015,
+    lang: "Telugu",
+    genre: "Action, Drama",
+    theme: "A young man discovers his heritage and fights for his kingdom.",
+    poster: "posters/bahubali.jpg",
+    video: "https://www.youtube.com/embed/VdafjyFK3ko", // unchanged
+  },
+  {
+    title: "Zindagi Na Milegi Dobara",
+    year: 2011,
+    lang: "Hindi",
+    genre: "Comedy, Drama",
+    theme: "Three friends embark on a road trip in Spain.",
+    poster: "posters/zindagi.jpg",
+    video: "https://www.youtube.com/embed/FJrpcDgC3zU", // updated
+  },
+  {
+    title: "Chhichhore",
+    year: 2019,
+    lang: "Hindi",
+    genre: "Comedy, Drama",
+    theme: "A group of friends reunite after years to relive their college days.",
+    poster: "posters/chhichhore.jpg",
+    video: "https://www.youtube.com/embed/tsxemFX0a7k", // unchanged
+  },
+  {
+    title: "Andhadhun",
+    year: 2018,
+    lang: "Hindi",
+    genre: "Thriller, Comedy",
+    theme: "A blind pianist becomes embroiled in a series of murders.",
+    poster: "posters/andhadhun.jpg",
+    video: "https://www.youtube.com/embed/Yw7ue1e23jM", // updated
+  },
+];
+
+
+  function loadMovies() {
+    moviesSection.innerHTML = "";
+    movies.forEach((movie) => {
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = <img src="${movie.poster}" alt="${movie.title}" /><h3>${movie.title}</h3>;
+      div.onclick = () => showModal(movie);
+      moviesSection.appendChild(div);
+    });
+  }
+
+  function showModal(movie) {
+    modalContent.innerHTML = `
+      <button class="close" onclick="closeModal(event)">&times;</button>
+      <img src="${movie.poster}" alt="${movie.title}" />
+      <div class="info">
+        <h2>${movie.title}</h2>
+        <p><strong>Year:</strong> ${movie.year}</p>
+        <p><strong>Language:</strong> ${movie.lang}</p>
+        <p><strong>Genre:</strong> ${movie.genre}</p>
+        <p><strong>Theme:</strong> ${movie.theme}</p>
+      </div>
+      <div class="modal-actions">
+        <button onclick="playTrailer('${movie.video}')">Watch Now</button>
+        <button onclick="alert('Download started (not really)!')">Download</button>
+      </div>
+      <div id="trailerContainer" style="display:none; margin-top: 1rem;">
+        <iframe id="trailer" width="100%" height="315" frameborder="0" allowfullscreen></iframe>
+      </div>
+    `;
+    modal.style.display = "flex";
+    document.body.classList.add("modal-open");
+    document.addEventListener("keydown", handleKeyPress);
+  }
+
+  function playTrailer(videoUrl) {
+    const trailerContainer = document.getElementById("trailerContainer");
+    const trailer = document.getElementById("trailer");
+    trailer.src = videoUrl;
+    trailerContainer.style.display = "block";
+  }
+
+  function closeModal(event) {
+    if (event) event.stopPropagation();
+    modal.style.display = "none";
+    document.body.classList.remove("modal-open");
+    document.removeEventListener("keydown", handleKeyPress);
+    const trailer = document.getElementById("trailer");
+    if (trailer) trailer.src = "";
+  }
+
+  function handleKeyPress(e) {
+    if (e.key === "Escape") {
+      closeModal();
+    }
+  }
+</script>
+</body>
+</html>
